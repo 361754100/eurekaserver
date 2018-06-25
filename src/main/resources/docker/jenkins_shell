@@ -1,0 +1,45 @@
+#!/bin/bash
+  imageId=`sudo docker images|grep -i eurekaserver|awk '{print $3}'`
+  echo "Test镜像ID = "$imageId
+  containId=`sudo docker ps -a |grep -i eurekaserver|awk '{print $1}'`
+  echo "Test容器ID = "$containId
+  project=/root/.jenkins/workspace/eurekaserver/src/main/resources/docker
+#判断是否存在旧的Test镜像
+  if test -z "$imageId"
+  then
+     echo "Test镜像不存在"
+  else
+     if test -z "$containId"
+     then
+         echo "容器不存在"
+     else
+         echo "容器将要被执行stop命令"
+         sudo docker stop test
+         echo "容器处于stop状态"
+     fi
+     echo "旧镜像将要被删除"
+     sudo docker rmi -f $imageId
+     echo "成功删除旧镜像"
+  fi
+#Dockerfile所在目录
+  sudo mv $project/Dockerfile /usr
+#切换目录至usr
+  cd /usr
+#将Tms war包拷贝到Dockerfile所在目录下
+  sudo mv /root/.jenkins/workspace/eurekaserver/target/eurekaserver-0.0.1-SNAPSHOT.jar.original ./eurekaserver-0.0.1-SNAPSHOT.jar
+  echo "镜像构建中:------->"
+#构建Tms镜像
+  sudo docker build -t eurekaserver .
+#判断是否存在旧的Tms容器
+  if test -z "$containId"
+  then
+    echo "容器不存在"
+  else
+    echo "旧容器将要被删除"
+    sudo docker rm -f $containId
+    echo "成功删除旧容器"
+  fi
+#创建容器
+  echo "开始创建新容器"
+  sudo docker run -d -p 8761:8761 -v /opt/springboot/logs:/opt/springboot/eurekaserver/logs --name eurekaserver eurekaserver
+  echo "新容器创建成功"
