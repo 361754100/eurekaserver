@@ -1,4 +1,5 @@
 FROM frolvlad/alpine-oraclejdk8:slim
+VOLUME /tmp
 MAINTAINER mojianzhang(361754100@qq.com)
 ENV JAVA_HOME /usr/java/jdk1.8.0_151
 ENV JRE_HOME $JAVA_HOME/jre
